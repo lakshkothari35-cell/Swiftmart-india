@@ -1,0 +1,6 @@
+{
+  "name": "SwiftMart India",
+  "description": "India's fastest 3D quick-commerce platform. Get Atta, Milk, and fresh essentials delivered in 15 minutes with a localized experience for Indian homes.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
