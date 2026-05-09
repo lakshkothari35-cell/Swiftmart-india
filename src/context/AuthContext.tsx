@@ -13,22 +13,21 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  // Load user from localStorage
-  React.useEffect(() => {
+  const [user, setUser] = useState<any | null>(() => {
+    // Load user from localStorage immediately to avoid flash or clearing
     const savedUser = localStorage.getItem('swiftmart_user');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        return JSON.parse(savedUser);
       } catch (e) {
         console.error('Error parsing saved user:', e);
       }
     }
-  }, []);
+    return null;
+  });
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  // Save user to localStorage
+  // Save user to localStorage when it changes
   React.useEffect(() => {
     if (user) {
       localStorage.setItem('swiftmart_user', JSON.stringify(user));

@@ -12,28 +12,21 @@ interface ProductContextType {
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-
-  // Load products from localStorage or use initial data
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>(() => {
     const savedProducts = localStorage.getItem('swiftmart_products');
     if (savedProducts) {
       try {
-        setProducts(JSON.parse(savedProducts));
+        return JSON.parse(savedProducts);
       } catch (e) {
         console.error('Error parsing saved products:', e);
-        setProducts(INITIAL_PRODUCTS);
       }
-    } else {
-      setProducts(INITIAL_PRODUCTS);
     }
-  }, []);
+    return INITIAL_PRODUCTS;
+  });
 
   // Save to localStorage when products change
   useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem('swiftmart_products', JSON.stringify(products));
-    }
+    localStorage.setItem('swiftmart_products', JSON.stringify(products));
   }, [products]);
 
   const addProduct = (newProductData: Omit<Product, 'id'>) => {

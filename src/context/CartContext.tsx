@@ -40,34 +40,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
   const [lastOrder, setLastOrder] = useState<any | null>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [unseenOrdersCount, setUnseenOrdersCount] = useState(0);
-  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
-
-  // Load orders from localStorage if any
-  useEffect(() => {
+  const [orders, setOrders] = useState<any[]>(() => {
     const savedOrders = localStorage.getItem('swiftmart_orders');
-    const savedUnseenCount = localStorage.getItem('swiftmart_unseen_orders');
-    
     if (savedOrders) {
       try {
-        setOrders(JSON.parse(savedOrders));
+        return JSON.parse(savedOrders);
       } catch (e) {
         console.error('Error parsing saved orders:', e);
       }
     }
-
-    if (savedUnseenCount) {
-      setUnseenOrdersCount(parseInt(savedUnseenCount) || 0);
-    }
-  }, []);
+    return [];
+  });
+  const [unseenOrdersCount, setUnseenOrdersCount] = useState(() => {
+    const savedUnseenCount = localStorage.getItem('swiftmart_unseen_orders');
+    return savedUnseenCount ? parseInt(savedUnseenCount) || 0 : 0;
+  });
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   // Save orders to localStorage when they change
   useEffect(() => {
-    if (orders.length > 0) {
-      localStorage.setItem('swiftmart_orders', JSON.stringify(orders));
-    }
+    localStorage.setItem('swiftmart_orders', JSON.stringify(orders));
   }, [orders]);
 
   useEffect(() => {
