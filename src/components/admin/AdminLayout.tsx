@@ -5,6 +5,9 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider } from '@/components/ui/sidebar';
 import { useAuth } from '@/src/context/AuthContext';
+import { useCart } from '@/src/context/CartContext';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -22,6 +25,15 @@ const navItems = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAuth();
+  const { unseenOrdersCount, resetUnseenOrders } = useCart();
+  const location = useLocation();
+
+  // Reset notifications if we are on the orders page
+  useEffect(() => {
+    if (location.pathname === '/admin/orders' && unseenOrdersCount > 0) {
+      resetUnseenOrders();
+    }
+  }, [location.pathname, unseenOrdersCount, resetUnseenOrders]);
 
   return (
     <SidebarProvider>
@@ -106,9 +118,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider">System Live</span>
               </div>
               
-              <button className="relative text-slate-400 hover:text-white transition-colors">
+              <button 
+                onClick={resetUnseenOrders}
+                className="relative text-slate-400 hover:text-white transition-colors"
+              >
                 <Bell size={20} />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-accent rounded-full text-[10px] font-bold flex items-center justify-center text-white ring-2 ring-slate-950">12</span>
+                {unseenOrdersCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-accent rounded-full text-[10px] font-bold flex items-center justify-center text-white ring-2 ring-slate-950 animate-bounce">
+                    {unseenOrdersCount}
+                  </span>
+                )}
               </button>
             </div>
           </header>

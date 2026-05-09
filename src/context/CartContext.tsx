@@ -18,6 +18,8 @@ interface CartContextType {
   checkout: () => void;
   lastOrder: any | null;
   orders: any[];
+  unseenOrdersCount: number;
+  resetUnseenOrders: () => void;
   isReceiptOpen: boolean;
   setIsReceiptOpen: (val: boolean) => void;
   
@@ -39,18 +41,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
   const [lastOrder, setLastOrder] = useState<any | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  const [unseenOrdersCount, setUnseenOrdersCount] = useState(0);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   // Load orders from localStorage if any
   useEffect(() => {
     const savedOrders = localStorage.getItem('swiftmart_orders');
+    const savedUnseenCount = localStorage.getItem('swiftmart_unseen_orders');
+    
     if (savedOrders) {
       try {
         setOrders(JSON.parse(savedOrders));
       } catch (e) {
         console.error('Error parsing saved orders:', e);
       }
+    }
+
+    if (savedUnseenCount) {
+      setUnseenOrdersCount(parseInt(savedUnseenCount) || 0);
     }
   }, []);
 
@@ -60,6 +69,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('swiftmart_orders', JSON.stringify(orders));
     }
   }, [orders]);
+
+  useEffect(() => {
+    localStorage.setItem('swiftmart_unseen_orders', unseenOrdersCount.toString());
+  }, [unseenOrdersCount]);
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryCharge = appliedCoupon?.type === 'FREE_DELIVERY' && subtotal >= (appliedCoupon.minOrderValue || 0) ? 0 : 5;
@@ -166,10 +179,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     };
     setLastOrder(orderData);
     setOrders(prev => [orderData, ...prev]);
+    setUnseenOrdersCount(prev => prev + 1);
     setIsOpen(false);
     setIsCheckoutSuccess(true);
     setCart([]);
     setAppliedCoupon(null);
+  };
+
+  const resetUnseenOrders = () => {
+    setUnseenOrdersCount(0);
   };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -190,6 +208,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       checkout,
       lastOrder,
       orders,
+      unseenOrdersCount,
+      resetUnseenOrders,
       isReceiptOpen,
       setIsReceiptOpen,
       appliedCoupon,
