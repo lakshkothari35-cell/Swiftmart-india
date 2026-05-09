@@ -17,6 +17,7 @@ interface CartContextType {
   setIsCheckoutSuccess: (val: boolean) => void;
   checkout: () => void;
   lastOrder: any | null;
+  orders: any[];
   isReceiptOpen: boolean;
   setIsReceiptOpen: (val: boolean) => void;
   
@@ -37,8 +38,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckoutSuccess, setIsCheckoutSuccess] = useState(false);
   const [lastOrder, setLastOrder] = useState<any | null>(null);
+  const [orders, setOrders] = useState<any[]>([]);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+
+  // Load orders from localStorage if any
+  useEffect(() => {
+    const savedOrders = localStorage.getItem('swiftmart_orders');
+    if (savedOrders) {
+      try {
+        setOrders(JSON.parse(savedOrders));
+      } catch (e) {
+        console.error('Error parsing saved orders:', e);
+      }
+    }
+  }, []);
+
+  // Save orders to localStorage when they change
+  useEffect(() => {
+    if (orders.length > 0) {
+      localStorage.setItem('swiftmart_orders', JSON.stringify(orders));
+    }
+  }, [orders]);
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const deliveryCharge = appliedCoupon?.type === 'FREE_DELIVERY' && subtotal >= (appliedCoupon.minOrderValue || 0) ? 0 : 5;
@@ -144,6 +165,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       date: new Date().toISOString()
     };
     setLastOrder(orderData);
+    setOrders(prev => [orderData, ...prev]);
     setIsOpen(false);
     setIsCheckoutSuccess(true);
     setCart([]);
@@ -167,6 +189,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       setIsCheckoutSuccess,
       checkout,
       lastOrder,
+      orders,
       isReceiptOpen,
       setIsReceiptOpen,
       appliedCoupon,

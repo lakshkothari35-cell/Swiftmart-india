@@ -1,9 +1,10 @@
 import { ReactNode } from 'react';
 import { LayoutDashboard, ShoppingBag, Package, Truck, Users, Settings, LogOut, Bell, Search, Tag } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider } from '@/components/ui/sidebar';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -20,21 +21,23 @@ const navItems = [
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const { user, logout } = useAuth();
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-slate-950 text-slate-50 w-full">
         {/* Futuristic Sidebar */}
         <Sidebar className="border-r border-slate-800/50 bg-slate-950/80 backdrop-blur-xl">
           <SidebarHeader className="p-6">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(0,242,255,0.4)]">
                 <span className="font-black text-gray-950">S</span>
               </div>
-              <div>
+              <div className="text-left">
                 <h1 className="text-xl font-bold tracking-tighter">SWIFT<span className="text-brand-primary">HUB</span></h1>
                 <p className="text-[10px] text-brand-primary uppercase tracking-[0.2em] font-bold">Admin Engine</p>
               </div>
-            </div>
+            </Link>
           </SidebarHeader>
 
           <SidebarContent className="px-4">
@@ -65,14 +68,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <SidebarFooter className="p-4 mt-auto">
             <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl flex items-center gap-3">
               <Avatar className="h-10 w-10 border border-brand-primary/20">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback className="bg-brand-primary text-gray-950 font-black">
+                  {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
+                </AvatarFallback>
               </Avatar>
               <div className="flex-grow min-w-0">
-                <p className="text-sm font-bold truncate">Alex Admin</p>
+                <p className="text-sm font-bold truncate">{user?.name || 'Admin User'}</p>
                 <p className="text-[10px] text-slate-500 truncate italic">Super Admin</p>
               </div>
-              <button className="text-slate-500 hover:text-brand-accent transition-colors">
+              <button 
+                onClick={logout}
+                className="text-slate-500 hover:text-brand-accent transition-colors"
+                title="Logout"
+              >
                 <LogOut size={18} />
               </button>
             </div>

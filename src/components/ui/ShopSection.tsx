@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { PRODUCTS, CATEGORIES } from '../../constants/data';
+import { CATEGORIES } from '../../constants/data';
 import { ShoppingCart, Plus, Minus, Info, Zap, Search, SlidersHorizontal } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useProduct } from '../../context/ProductContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { PriceFilter } from './PriceFilter';
 
@@ -11,6 +12,7 @@ export const ShopSection = () => {
   const [activeCategory, setActiveCategory] = useState('All Products');
   const [priceRange, setPriceRange] = useState({ min: 0, max: 2000 });
   const { language, t } = useLanguage();
+  const { products } = useProduct();
 
   const getTranslatedProduct = (product: any) => {
     if (language === 'HI') {
@@ -33,7 +35,7 @@ export const ShopSection = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.map(getTranslatedProduct).filter(product => {
+    return products.map(getTranslatedProduct).filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            product.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === 'All Products' || product.category === activeCategory;
@@ -41,9 +43,12 @@ export const ShopSection = () => {
       
       return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [searchQuery, activeCategory, priceRange, language]);
+  }, [products, searchQuery, activeCategory, priceRange, language]);
 
-  const maxProductPrice = Math.max(...PRODUCTS.map(p => p.price));
+  const maxProductPrice = useMemo(() => {
+    if (products.length === 0) return 0;
+    return Math.max(...products.map(p => p.price));
+  }, [products]);
 
   return (
     <section id="shop" className="py-24 px-6 relative z-10 transition-colors duration-500">

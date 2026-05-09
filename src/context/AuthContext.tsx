@@ -16,12 +16,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  // Load user from localStorage
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem('swiftmart_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error('Error parsing saved user:', e);
+      }
+    }
+  }, []);
+
+  // Save user to localStorage
+  React.useEffect(() => {
+    if (user) {
+      localStorage.setItem('swiftmart_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('swiftmart_user');
+    }
+  }, [user]);
+
   const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
 
   const login = (credentials: any) => {
+    // Admin check
+    if (credentials.email === 'admin' && credentials.password === 'admin@123') {
+      setUser({ 
+        name: 'Admin User', 
+        email: 'admin', 
+        role: 'admin',
+        isAdmin: true 
+      });
+      setIsLoginModalOpen(false);
+      return;
+    }
+
     // Mock login logic
-    setUser({ name: 'Swift User', email: credentials.email || 'user@example.com' });
+    setUser({ name: credentials.name || 'Swift User', email: credentials.email || 'user@example.com', isAdmin: false });
     setIsLoginModalOpen(false);
   };
 
@@ -31,12 +64,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser({ 
       name: names[provider], 
       email: `${provider}@example.com`,
-      provider: provider 
+      provider: provider,
+      isAdmin: false
     });
     setIsLoginModalOpen(false);
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    localStorage.removeItem('swiftmart_user');
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ 

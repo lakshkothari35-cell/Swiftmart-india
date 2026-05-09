@@ -3,18 +3,48 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Filter, MoreVertical, Edit, Trash2 } from 'lucide-react';
-import { PRODUCTS } from '@/src/constants/data';
+import { Search, Plus, Filter, MoreVertical, Edit, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import { CATEGORIES } from '@/src/constants/data';
+import { useProduct } from '@/src/context/ProductContext';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { motion, AnimatePresence } from 'motion/react';
 
 export function InventoryManagement() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { products, addProduct, deleteProduct } = useProduct();
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'Grocery',
+    price: 0,
+    mrp: 0,
+    image: '',
+    description: '',
+    unit: '1 kg',
+    color: '#00f2ff'
+  });
 
-  const filteredProducts = PRODUCTS.filter(product => 
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
     `SKU-${product.id}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAddProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    addProduct(newProduct as any);
+    setIsAddModalOpen(false);
+    setNewProduct({
+      name: '',
+      category: 'Grocery',
+      price: 0,
+      mrp: 0,
+      image: '',
+      description: '',
+      unit: '1 kg',
+      color: '#00f2ff'
+    });
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -23,17 +53,156 @@ export function InventoryManagement() {
           <h2 className="text-3xl font-black tracking-tight">Active <span className="text-brand-primary">Inventory</span></h2>
           <p className="text-slate-400">Control product availability, pricing, and urban warehouse stock.</p>
         </div>
-        <button className="flex items-center gap-2 bg-brand-primary text-gray-950 px-6 py-2.5 rounded-xl font-bold shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:scale-105 transition-all">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 bg-brand-primary text-gray-950 px-6 py-2.5 rounded-xl font-bold shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:scale-105 transition-all"
+        >
           <Plus size={20} />
           Add Neural Package
         </button>
       </div>
 
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAddModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
+            >
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-2xl font-black uppercase italic text-white flex items-center gap-3">
+                    <Plus className="text-brand-primary" /> Add New <span className="text-brand-primary">SKU</span>
+                  </h3>
+                  <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-colors">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddProduct} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Product Name</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Aashirvaad Atta"
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all"
+                        value={newProduct.name}
+                        onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Category</label>
+                      <select 
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all appearance-none"
+                        value={newProduct.category}
+                        onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                      >
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Base Price (₹)</label>
+                      <input 
+                        type="number" 
+                        required
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all"
+                        value={newProduct.price || ''}
+                        onChange={(e) => setNewProduct({...newProduct, price: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">MRP (₹)</label>
+                      <input 
+                        type="number" 
+                        required
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all"
+                        value={newProduct.mrp || ''}
+                        onChange={(e) => setNewProduct({...newProduct, mrp: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Image URL</label>
+                      <div className="relative">
+                        <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                        <input 
+                          type="url" 
+                          required
+                          placeholder="https://images.unsplash.com/..."
+                          className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-brand-primary transition-all"
+                          value={newProduct.image}
+                          onChange={(e) => setNewProduct({...newProduct, image: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Unit (e.g. 1 kg)</label>
+                      <input 
+                        type="text" 
+                        required
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all"
+                        value={newProduct.unit}
+                        onChange={(e) => setNewProduct({...newProduct, unit: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Brand Color</label>
+                      <input 
+                        type="color" 
+                        className="w-full h-11 bg-slate-950/50 border border-white/10 rounded-xl px-2 text-sm focus:outline-none focus:border-brand-primary transition-all cursor-pointer"
+                        value={newProduct.color}
+                        onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Full Description</label>
+                      <textarea 
+                        rows={3}
+                        required
+                        className="w-full bg-slate-950/50 border border-white/10 rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-brand-primary transition-all resize-none"
+                        value={newProduct.description}
+                        onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <button 
+                      type="button" 
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="flex-1 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border border-white/10 text-slate-400 hover:bg-white/5 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest bg-brand-primary text-gray-950 shadow-[0_0_20px_rgba(0,242,255,0.3)] hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      Commission Package
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-slate-900 border-slate-800">
           <CardContent className="p-6">
             <p className="text-xs text-slate-500 uppercase font-bold mb-1">Total SKUs</p>
-            <h3 className="text-2xl font-black">4,284</h3>
+            <h3 className="text-2xl font-black">{products.length.toLocaleString()}</h3>
           </CardContent>
         </Card>
         <Card className="bg-slate-900 border-slate-800">
@@ -100,7 +269,7 @@ export function InventoryManagement() {
                   <TableCell>
                     <div>
                       <p className="font-bold text-sm tracking-tight">{product.name}</p>
-                      <p className="text-[10px] uppercase text-slate-500 font-mono">SKU-{product.id}1092</p>
+                      <p className="text-[10px] uppercase text-slate-500 font-mono">SKU-{product.id.padStart(4, '0')}</p>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -127,7 +296,10 @@ export function InventoryManagement() {
                         <DropdownMenuItem className="gap-2 focus:bg-brand-primary/10 focus:text-brand-primary">
                           <Edit size={14} /> Edit Unit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 focus:bg-red-500/10 focus:text-red-500 text-red-500">
+                        <DropdownMenuItem 
+                          onClick={() => deleteProduct(product.id)}
+                          className="gap-2 focus:bg-red-500/10 focus:text-red-500 text-red-500"
+                        >
                           <Trash2 size={14} /> Delete SKU
                         </DropdownMenuItem>
                       </DropdownMenuContent>

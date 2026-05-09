@@ -8,13 +8,16 @@ import { AuthModal } from './components/ui/AuthModal';
 import { CheckoutSuccessModal } from './components/ui/CheckoutSuccessModal';
 import { ReceiptModal } from './components/ui/ReceiptModal';
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import { AdminLayout } from './components/admin/AdminLayout';
 import { DashboardOverview } from './components/admin/DashboardOverview';
 import { InventoryManagement } from './components/admin/InventoryManagement';
 import { OrderStream } from './components/admin/OrderStream';
 import { CouponManagement } from './components/admin/CouponManagement';
+import { OrderHistory } from './components/ui/OrderHistory';
 import { CartProvider } from './context/CartContext';
+import { ProductProvider } from './context/ProductContext';
 import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -48,6 +51,7 @@ function CustomerSite() {
                  <a href="#" className="hover:text-brand-primary transition-colors">Privacy Policy</a>
                  <a href="#" className="hover:text-brand-primary transition-colors">Career (We are hiring!)</a>
                  <a href="#" className="hover:text-brand-primary transition-colors">Store Locator</a>
+                 <Link to="/admin" className="hover:text-brand-primary transition-colors font-bold text-brand-primary/50">Admin Panel</Link>
                  <a href="#" className="hover:text-brand-primary transition-colors">Sustainability</a>
               </div>
             </div>
@@ -59,6 +63,14 @@ function CustomerSite() {
       </footer>
     </>
   );
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (!user || !user.isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -75,8 +87,9 @@ export default function App() {
         <LanguageProvider>
           <ThemeProvider>
             <AuthProvider>
-              <CartProvider>
-                <div className="min-h-screen bg-background selection:bg-brand-primary/30">
+              <ProductProvider>
+                <CartProvider>
+                  <div className="min-h-screen bg-background selection:bg-brand-primary/30">
                   <AnimatePresence>
                     {loading && (
                       <motion.div
@@ -99,15 +112,16 @@ export default function App() {
                     <Routes>
                       {/* Customer Facing Routes */}
                       <Route path="/" element={<CustomerSite />} />
+                      <Route path="/orders" element={<OrderHistory />} />
                       
                       {/* Admin Hub Routes */}
-                      <Route path="/admin" element={<AdminLayout children={<DashboardOverview />} />} />
-                      <Route path="/admin/orders" element={<AdminLayout children={<OrderStream />} />} />
-                      <Route path="/admin/inventory" element={<AdminLayout children={<InventoryManagement />} />} />
-                      <Route path="/admin/promotions" element={<AdminLayout children={<CouponManagement />} />} />
-                      <Route path="/admin/delivery" element={<AdminLayout children={<div className="p-12 text-center text-slate-500">Logistics Module Loading...</div>} />} />
-                      <Route path="/admin/customers" element={<AdminLayout children={<div className="p-12 text-center text-slate-500">Customer CRM Initializing...</div>} />} />
-                      <Route path="/admin/settings" element={<AdminLayout children={<div className="p-12 text-center text-slate-500">Core Engine Settings Locked.</div>} />} />
+                      <Route path="/admin" element={<AdminRoute><AdminLayout children={<DashboardOverview />} /></AdminRoute>} />
+                      <Route path="/admin/orders" element={<AdminRoute><AdminLayout children={<OrderStream />} /></AdminRoute>} />
+                      <Route path="/admin/inventory" element={<AdminRoute><AdminLayout children={<InventoryManagement />} /></AdminRoute>} />
+                      <Route path="/admin/promotions" element={<AdminRoute><AdminLayout children={<CouponManagement />} /></AdminRoute>} />
+                      <Route path="/admin/delivery" element={<AdminRoute><AdminLayout children={<div className="p-12 text-center text-slate-500">Logistics Module Loading...</div>} /></AdminRoute>} />
+                      <Route path="/admin/customers" element={<AdminRoute><AdminLayout children={<div className="p-12 text-center text-slate-500">Customer CRM Initializing...</div>} /></AdminRoute>} />
+                      <Route path="/admin/settings" element={<AdminRoute><AdminLayout children={<div className="p-12 text-center text-slate-500">Core Engine Settings Locked.</div>} /></AdminRoute>} />
                       
                       {/* Fallback */}
                       <Route path="*" element={<Navigate to="/" replace />} />
@@ -115,7 +129,8 @@ export default function App() {
                   )}
                 </div>
               </CartProvider>
-            </AuthProvider>
+            </ProductProvider>
+          </AuthProvider>
           </ThemeProvider>
         </LanguageProvider>
       </LocationProvider>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ShoppingCart, Search, User, Zap, LogOut, Sun, Moon, Sparkles, Palette, Check, MapPin, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Search, User, Zap, LogOut, Sun, Moon, Sparkles, Palette, Check, MapPin, ChevronDown, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -163,17 +164,33 @@ export const Navbar = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs font-bold text-white">{user.name}</span>
-                <button 
-                  onClick={logout}
-                  className="text-[10px] text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1"
-                >
-                  <LogOut size={10} /> Logout
-                </button>
+                <span className="text-xs font-bold text-white mb-1">{user.name}</span>
+                <div className="flex items-center gap-3">
+                  <Link 
+                    to="/orders"
+                    className="text-[10px] text-brand-primary hover:text-white transition-colors flex items-center gap-1 font-bold uppercase tracking-tighter"
+                  >
+                    <Package size={10} /> Orders
+                  </Link>
+                  {user.isAdmin && (
+                    <Link 
+                      to="/admin"
+                      className="text-[10px] text-brand-secondary hover:text-white transition-colors flex items-center gap-1 font-bold uppercase tracking-tighter"
+                    >
+                      <Zap size={10} /> Admin Hub
+                    </Link>
+                  )}
+                  <button 
+                    onClick={logout}
+                    className="text-[10px] text-gray-500 hover:text-red-400 transition-colors flex items-center gap-1 font-bold uppercase tracking-tighter"
+                  >
+                    <LogOut size={10} /> Logout
+                  </button>
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-primary">
+              <Link to="/orders" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-primary hover:border-brand-primary transition-colors">
                 <User size={20} />
-              </div>
+              </Link>
             </div>
           ) : (
             <button 
